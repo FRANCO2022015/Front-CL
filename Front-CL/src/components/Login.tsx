@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import api from '../api';
 
 type Props = {
   onLogin: (username: string) => void;
@@ -8,12 +9,35 @@ type Props = {
 const Login: React.FC<Props> = ({ onLogin }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (username && password) {
-      onLogin(username);
+      setLoading(true);
+      try {
+        const response = await api.post('/usuario/login', {
+          tenant_id: 'udemy', // Cambia esto si tu tenant es diferente
+          dni: username,
+          rol: 'admin', // Cambia esto si el rol es diferente
+          password: password,
+        });
+        // Suponiendo que el token viene en response.data.token
+        if (response.data && response.data.token) {
+          localStorage.setItem('token', response.data.token);
+          api.defaults.headers.common['Authorization'] = response.data.token;
+          onLogin(username);
+          // Redirige a la página principal o dashboard si lo deseas
+          // navigate('/dashboard');
+        } else {
+          alert('Respuesta inesperada del servidor');
+        }
+      } catch (error: any) {
+        alert('Usuario o contraseña incorrectos');
+      } finally {
+        setLoading(false);
+      }
     } else {
       alert('Ingrese usuario y contraseña');
     }
@@ -33,6 +57,7 @@ const Login: React.FC<Props> = ({ onLogin }) => {
               onChange={e => setUsername(e.target.value)}
               className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="Ingrese su usuario"
+              disabled={loading}
             />
           </div>
           <div>
@@ -43,6 +68,7 @@ const Login: React.FC<Props> = ({ onLogin }) => {
               onChange={e => setPassword(e.target.value)}
               className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="Ingrese su contraseña"
+              disabled={loading}
             />
             <div className="text-right mt-2">
               <a href="#" className="text-sm text-blue-500 hover:underline">
@@ -53,8 +79,9 @@ const Login: React.FC<Props> = ({ onLogin }) => {
           <button
             type="submit"
             className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition"
+            disabled={loading}
           >
-            Ingresar
+            {loading ? 'Ingresando...' : 'Ingresar'}
           </button>
         </form>
         <p className="text-center text-sm mt-6">
@@ -62,6 +89,7 @@ const Login: React.FC<Props> = ({ onLogin }) => {
           <button
             onClick={() => navigate('/register')}
             className="text-blue-500 hover:underline"
+            disabled={loading}
           >
             Regístrate aquí
           </button>
