@@ -9,6 +9,7 @@ type Props = {
 const Login: React.FC<Props> = ({ onLogin }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [rol, setRol] = useState('alumno');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
@@ -18,23 +19,44 @@ const Login: React.FC<Props> = ({ onLogin }) => {
       setLoading(true);
       try {
         const response = await api.post('/usuario/login', {
-          tenant_id: 'udemy', // Cambia esto si tu tenant es diferente
+          tenant_id: 'udemy',
           dni: username,
-          rol: 'admin', // Cambia esto si el rol es diferente
+          rol: rol,
           password: password,
         });
-        // Suponiendo que el token viene en response.data.token
-        if (response.data && response.data.token) {
-          localStorage.setItem('token', response.data.token);
-          api.defaults.headers.common['Authorization'] = response.data.token;
-          onLogin(username);
-          // Redirige a la página principal o dashboard si lo deseas
-          // navigate('/dashboard');
+
+        // El backend devuelve el token dentro de response.data.body (string JSON)
+        let statusCode = response.data.statusCode;
+        let body = response.data.body;
+
+        // Si body es string, parsea; si ya es objeto, úsalo directo
+        let parsedBody: any;
+        if (typeof body === 'string') {
+          try {
+            parsedBody = JSON.parse(body);
+          } catch {
+            parsedBody = {};
+          }
         } else {
-          alert('Respuesta inesperada del servidor');
+          parsedBody = body;
+        }
+
+        if (statusCode === 200 && parsedBody.token) {
+          localStorage.setItem('token', parsedBody.token);
+          api.defaults.headers.common['Authorization'] = parsedBody.token;
+          onLogin(username);
+          navigate('/dashboard');
+        } else {
+          alert(parsedBody.error || 'Usuario o contraseña incorrectos');
         }
       } catch (error: any) {
-        alert('Usuario o contraseña incorrectos');
+        // Muestra el error real si existe
+        if (error.response && error.response.data) {
+          let errMsg = error.response.data.error || JSON.stringify(error.response.data);
+          alert('Error: ' + errMsg);
+        } else {
+          alert('Error de conexión con el servidor');
+        }
       } finally {
         setLoading(false);
       }
@@ -70,11 +92,19 @@ const Login: React.FC<Props> = ({ onLogin }) => {
               placeholder="Ingrese su contraseña"
               disabled={loading}
             />
-            <div className="text-right mt-2">
-              <a href="#" className="text-sm text-blue-500 hover:underline">
-                ¿Olvidaste tu contraseña?
-              </a>
-            </div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium">Rol</label>
+            <select
+              value={rol}
+              onChange={e => setRol(e.target.value)}
+              className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              disabled={loading}
+            >
+              <option value="alumno">Alumno</option>
+              <option value="instructor">Instructor</option>
+              <option value="admin">Admin</option>
+            </select>
           </div>
           <button
             type="submit"
