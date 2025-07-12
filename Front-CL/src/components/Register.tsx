@@ -1,34 +1,43 @@
-import React, { useState } from 'react';
-import api from '../api';
-import { useNavigate } from 'react-router-dom';
+// src/components/Register.tsx
+import React, { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import axios from 'axios'
 
 const Register: React.FC = () => {
-  const [dni, setDni] = useState('');
-  const [fullName, setFullName] = useState('');
-  const [password, setPassword] = useState('');
-  const [rol, setRol] = useState('alumno'); // O 'admin', 'instructor'
-  const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
+  const [dni, setDni] = useState('')
+  const [fullName, setFullName] = useState('')
+  const [password, setPassword] = useState('')
+  const [rol, setRol] = useState('alumno')
+  const [loading, setLoading] = useState(false)
+  const navigate = useNavigate()
 
   const handleRegister = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
+    e.preventDefault()
+    setLoading(true)
     try {
-      await api.post('/usuario/crear', {
-        tenant_id: 'udemy',
-        dni,
-        full_name: fullName,
-        password,
-        rol,
-      });
-      alert('Usuario registrado correctamente');
-      navigate('/'); // Redirige al login
-    } catch (error: any) {
-      alert('Error al registrar usuario');
+      const { data } = await axios.post(
+        'https://9fea0kjoe5.execute-api.us-east-1.amazonaws.com/dev/usuario/crear',
+        {
+          tenant_id: 'udemy',
+          dni,
+          full_name: fullName,
+          password,
+          rol
+        },
+        { headers: { 'Content-Type': 'application/json' } }
+      )
+      if (data.dni) {
+        alert('Usuario registrado correctamente')
+        navigate('/')
+      } else {
+        alert(data.error || 'Error desconocido')
+      }
+    } catch (err: any) {
+      alert(err.response?.data?.error || 'Error de conexión')
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-fixed bg-center bg-cover bg-[url('https://images.unsplash.com/photo-1584697964154-b64b5ec9e6d1?auto=format&fit=crop&w=1740&q=80')] relative">
@@ -40,10 +49,10 @@ const Register: React.FC = () => {
             <label className="block text-sm font-medium">DNI</label>
             <input
               type="text"
-              placeholder="DNI"
               value={dni}
               onChange={e => setDni(e.target.value)}
-              className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="DNI"
+              className="mt-1 block w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
               disabled={loading}
             />
@@ -52,10 +61,10 @@ const Register: React.FC = () => {
             <label className="block text-sm font-medium">Nombre completo</label>
             <input
               type="text"
-              placeholder="Nombre completo"
               value={fullName}
               onChange={e => setFullName(e.target.value)}
-              className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Nombre completo"
+              className="mt-1 block w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
               disabled={loading}
             />
@@ -64,10 +73,10 @@ const Register: React.FC = () => {
             <label className="block text-sm font-medium">Contraseña</label>
             <input
               type="password"
-              placeholder="Contraseña"
               value={password}
               onChange={e => setPassword(e.target.value)}
-              className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Contraseña"
+              className="mt-1 block w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
               disabled={loading}
             />
@@ -77,7 +86,7 @@ const Register: React.FC = () => {
             <select
               value={rol}
               onChange={e => setRol(e.target.value)}
-              className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="mt-1 block w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               disabled={loading}
             >
               <option value="alumno">Alumno</option>
@@ -87,8 +96,8 @@ const Register: React.FC = () => {
           </div>
           <button
             type="submit"
-            className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition"
             disabled={loading}
+            className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition"
           >
             {loading ? 'Registrando...' : 'Registrarse'}
           </button>
@@ -105,7 +114,7 @@ const Register: React.FC = () => {
         </p>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default Register;
+export default Register

@@ -1,11 +1,9 @@
-import React from 'react';
+import React from 'react'
 
-type HelloProps = {
-  name: string;
-};
+type Props = { name: string }
 
-const Hello: React.FC<HelloProps> = ({ name }) => {
-  return <h2>Hola, {name} 👋</h2>;
-};
+const Hello: React.FC<Props> = ({ name }) => (
+  <h1>Bienvenido, {name}</h1>
+)
 
-export default Hello;
+export default Hello

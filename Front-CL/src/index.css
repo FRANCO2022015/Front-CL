@@ -1,6 +1,21 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+/* index.css */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  font-family: sans-serif;
+  background-color: #222; /* si aún quieres fondo oscuro */
+}
 
 :root {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;

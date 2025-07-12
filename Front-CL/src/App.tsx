@@ -1,22 +1,25 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
+import { useState, useEffect } from 'react'
+import Login from './components/Login'
+import Hello from './Hello'
 import './App.css'
-import Hello from './Hello';
-import Login from './components/Login';
 
 function App() {
-  const [user, setUser] = useState<string | null>(null);
+  const [user, setUser] = useState<string | null>(null)
 
-  return (
-    <div>
-      {user ? (
-        <h1>Bienvenido, {user}</h1>
-      ) : (
-        <Login onLogin={setUser} />
-      )}
-    </div>
-  );
+  useEffect(() => {
+    const token = localStorage.getItem('token')
+    const savedUser = localStorage.getItem('user')
+    if (token && savedUser) setUser(savedUser)
+  }, [])
+
+  const handleLogin = (username: string) => {
+    localStorage.setItem('user', username)
+    setUser(username)
+  }
+
+  return user
+    ? <Hello name={user} />
+    : <Login onLogin={handleLogin} />
 }
 
-export default App;
+export default App
