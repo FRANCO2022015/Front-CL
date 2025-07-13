@@ -1,7 +1,7 @@
 .dashboard-container {
   padding: 2rem;
   min-height: 100vh;
-  background: #f3f4f6;
+  background: #124dc4;
   color: #111827;
 }
 
@@ -19,7 +19,7 @@
 }
 
 .course-card {
-  background: #fff;
+  background: #d41616;
   border-radius: .5rem;
   padding: 1rem;
   box-shadow: 0 1px 3px rgba(0,0,0,0.1);
@@ -28,7 +28,7 @@
 .actions button {
   margin-right: .5rem;
   background: #2563eb;
-  color: #fff;
+  color: #9032a3;
   border: none;
   padding: .5rem 1rem;
   border-radius: .375rem;
@@ -41,5 +41,5 @@
 
 .horario-item {
   padding: .5rem 0;
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid #0e41a0;
 }
