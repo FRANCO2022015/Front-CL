@@ -1,6 +1,11 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import './Login.css'
+const ORG_URL = import.meta.env.VITE_API_ORG_URL
+const USER_URL = import.meta.env.VITE_API_USER_URL
+const CURSO_URL = import.meta.env.VITE_API_CURSO_URL
+const HORARIO_URL = import.meta.env.VITE_API_HORARIO_URL
+const COMPRA_URL = import.meta.env.VITE_API_COMPRA_URL
 
 type Props = {
   onLogin: (username: string, rol: string) => void
@@ -16,7 +21,7 @@ export default function Login({ onLogin }: Props) {
   const navigate = useNavigate()
 
   useEffect(() => {
-    fetch('https://h1m4en6skg.execute-api.us-east-1.amazonaws.com/dev/org/listar')
+    fetch(`${ORG_URL}/listar`)
       .then(r => r.json())
       .then(data => {
         const b = typeof data.body === 'string' ? JSON.parse(data.body) : data.body
@@ -33,7 +38,7 @@ export default function Login({ onLogin }: Props) {
     dni: username,
     password
   }
-  const res = await fetch('https://62zai3xgf6.execute-api.us-east-1.amazonaws.com/dev/usuario/login', {
+  const res = await fetch(`${USER_URL}/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body)

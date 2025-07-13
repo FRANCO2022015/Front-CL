@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
-
+const ORG_URL = import.meta.env.VITE_API_ORG_URL
+const USER_URL = import.meta.env.VITE_API_USER_URL
+const CURSO_URL = import.meta.env.VITE_API_CURSO_URL
+const HORARIO_URL = import.meta.env.VITE_API_HORARIO_URL
+const COMPRA_URL = import.meta.env.VITE_API_COMPRA_URL
 export default function VerAlumnos() {
   const { cursoId } = useParams<{ cursoId: string }>()
   const [alumnos, setAlumnos] = useState<{ dni: string; nombre: string }[]>([])
@@ -9,7 +13,7 @@ export default function VerAlumnos() {
 
   useEffect(() => {
     fetch(
-      `https://e1ci7r1h9e.execute-api.us-east-1.amazonaws.com/dev/compra/listar?tenant=${orgId}&cursoId=${cursoId}`,
+      `${COMPRA_URL}/listar?tenant=${orgId}&cursoId=${cursoId}`,
       { headers: { Authorization: token } }
     )
       .then(r => r.json())

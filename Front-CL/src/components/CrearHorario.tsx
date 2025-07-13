@@ -1,5 +1,10 @@
 import React, { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
+const ORG_URL = import.meta.env.VITE_API_ORG_URL
+const USER_URL = import.meta.env.VITE_API_USER_URL
+const CURSO_URL = import.meta.env.VITE_API_CURSO_URL
+const HORARIO_URL = import.meta.env.VITE_API_HORARIO_URL
+const COMPRA_URL = import.meta.env.VITE_API_COMPRA_URL
 
 export default function CrearHorario() {
   const { cursoId } = useParams<{ cursoId: string }>()
@@ -17,7 +22,7 @@ export default function CrearHorario() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     const body = { tenant_id: orgId, curso_id: cursoId, dias, inicio_hora: inicioHora, fin_hora: finHora }
-    await fetch('https://pu2l6zwh79.execute-api.us-east-1.amazonaws.com/dev/horario/crear', {
+    await fetch(`${HORARIO_URL}/crear`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: token },
       body: JSON.stringify(body)

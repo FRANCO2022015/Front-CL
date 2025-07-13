@@ -1,5 +1,10 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+const ORG_URL = import.meta.env.VITE_API_ORG_URL
+const USER_URL = import.meta.env.VITE_API_USER_URL
+const CURSO_URL = import.meta.env.VITE_API_CURSO_URL
+const HORARIO_URL = import.meta.env.VITE_API_HORARIO_URL
+const COMPRA_URL = import.meta.env.VITE_API_COMPRA_URL
 
 export default function CrearCurso() {
   const [nombre, setNombre] = useState('')
@@ -14,7 +19,7 @@ export default function CrearCurso() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     const body = { tenant_id: orgId, nombre, descripcion, inicio, fin, precio: parseFloat(precio) }
-    const res = await fetch('https://1dma7jwvx5.execute-api.us-east-1.amazonaws.com/dev/curso/crear', {
+    const res = await fetch(`${CURSO_URL}/crear`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: token },
       body: JSON.stringify(body)
