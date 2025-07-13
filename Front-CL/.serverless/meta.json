@@ -1,0 +1,27 @@
+{
+  "unknown": {
+    "versionFramework": "4.17.1",
+    "dashboard": {
+      "isEnabledForService": false,
+      "requiredAuthentication": false,
+      "orgFeaturesInUse": null,
+      "orgObservabilityIntegrations": null,
+      "serviceAppId": null,
+      "serviceProvider": null,
+      "instanceParameters": null
+    },
+    "command": [
+      "login"
+    ],
+    "options": {},
+    "orgId": "8e57197a-1a6e-4707-b464-469d4d181e94",
+    "orgName": "jsusvel",
+    "userId": "qZK4wJwnJxPySBpV0N",
+    "userName": "jsusvel",
+    "serviceProviderAwsCfStackId": null,
+    "serviceProviderAwsCfStackCreated": null,
+    "serviceProviderAwsCfStackUpdated": null,
+    "serviceProviderAwsCfStackStatus": null,
+    "serviceProviderAwsCfStackOutputs": null
+  }
+}

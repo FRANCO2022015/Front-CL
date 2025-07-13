@@ -8,7 +8,7 @@ const LogoutButton = () => {
     const token = localStorage.getItem('token')
     const tenant_id = 'udemy'
 
-    fetch('https://os8e4l68fh.execute-api.us-east-1.amazonaws.com/dev/usuario/logout', {
+    fetch('https://62zai3xgf6.execute-api.us-east-1.amazonaws.com/dev/usuario/logout', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ tenant_id, token })

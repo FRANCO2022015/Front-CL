@@ -16,7 +16,7 @@ const Register: React.FC = () => {
     setLoading(true)
     try {
       const response = await axios.post(
-        'https://os8e4l68fh.execute-api.us-east-1.amazonaws.com/dev/usuario/crear',
+        'https://62zai3xgf6.execute-api.us-east-1.amazonaws.com/dev/usuario/crear',
         {
           tenant_id: 'udemy',
           dni,

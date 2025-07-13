@@ -1,42 +1,24 @@
-// src/App.tsx
-import { useState, useEffect } from 'react'
-import Alumno from './components/Alumno'
-import Instructor from './components/Instructor'
-import Admin from './components/Admin'
+import React from 'react'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import Login from './components/Login'
-import './App.css'
+import InstructorDashboard from './components/InstructorDashboard'
+import CrearCurso from './components/CrearCurso'
+import CrearHorario from './components/CrearHorario'
+import VerAlumnos from './components/VerAlumnos'
 
-function App() {
-  const [user, setUser] = useState<string | null>(null)
-  const [rol, setRol] = useState<string | null>(null)
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    const token = localStorage.getItem('token')
-    const savedUser = localStorage.getItem('user')
-    const savedRol = localStorage.getItem('rol')
-
-    if (token && savedUser && savedRol) {
-      setUser(savedUser)
-      setRol(savedRol)
-    }
-    setLoading(false)
-  }, [])
-
-  const handleLogin = (username: string, rol: string) => {
-    setUser(username)
-    setRol(rol)
-  }
-
-  if (loading) return <div>Cargando...</div>
-
-  if (!user || !rol) return <Login onLogin={handleLogin} />
-
-  if (rol === 'alumno') return <Alumno />
-  if (rol === 'instructor') return <Instructor />
-  if (rol === 'admin') return <Admin />
-
-  return <div>Rol desconocido</div>
+export default function App() {
+  const handleLogin = (_u: string, _r: string) => {}
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Navigate to="/login" />} />
+        <Route path="/login" element={<Login onLogin={handleLogin} />} />
+        <Route path="/instructor/dashboard" element={<InstructorDashboard />} />
+        <Route path="/instructor/crear-curso" element={<CrearCurso />} />
+        <Route path="/instructor/:cursoId/crear-horario" element={<CrearHorario />} />
+        <Route path="/instructor/:cursoId/alumnos" element={<VerAlumnos />} />
+        <Route path="*" element={<Navigate to="/login" />} />
+      </Routes>
+    </BrowserRouter>
+  )
 }
-
-export default App
