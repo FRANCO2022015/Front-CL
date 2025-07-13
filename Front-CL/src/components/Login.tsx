@@ -3,7 +3,9 @@ import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import './Login.css'
 
-type Props = { onLogin: (username: string) => void }
+type Props = {
+  onLogin: (username: string, rol: string) => void
+}
 
 const Login: React.FC<Props> = ({ onLogin }) => {
   const [username, setUsername] = useState('')
@@ -20,42 +22,45 @@ const Login: React.FC<Props> = ({ onLogin }) => {
     }
     setLoading(true)
     try {
+      const rolLower = rol.toLowerCase()
+
       const res = await fetch(
-        'https://9fea0kjoe5.execute-api.us-east-1.amazonaws.com/dev/usuario/login',
+        'https://os8e4l68fh.execute-api.us-east-1.amazonaws.com/dev/usuario/login',
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             tenant_id: 'udemy',
             dni: username,
-            rol,
-            password
+            password,
+            rol: rolLower // 👈 aquí es clave
           })
         }
       )
 
-      if (!res.ok) {
-        const err = await res.json().catch(() => null)
-        throw new Error(err?.error || `HTTP ${res.status}`)
+      const rawData = await res.json()
+      console.log('📦 Respuesta sin parsear:', rawData)
+
+      const parsed =
+        typeof rawData.body === 'string'
+          ? JSON.parse(rawData.body)
+          : rawData.body
+
+      console.log('✅ Respuesta parseada:', parsed)
+
+      if (!parsed.token) {
+        alert(parsed.error || 'Usuario o contraseña incorrectos')
+        return
       }
 
-      const data = await res.json() as {
-        message: string
-        token?: string
-        expires_at?: string
-        error?: string
-      }
+      localStorage.setItem('token', parsed.token)
+      localStorage.setItem('user', username)
+      localStorage.setItem('rol', rolLower)
 
-      if (data.token) {
-        localStorage.setItem('token', data.token)
-        localStorage.setItem('user', username)
-        onLogin(username)
-      } else {
-        alert(data.error || 'Usuario o contraseña incorrectos')
-      }
+      onLogin(username, rolLower)
     } catch (err: any) {
-      console.error('fetch error:', err)
-      alert('Error: ' + (err.message || 'Error de conexión'))
+      console.error('❌ Error de login:', err)
+      alert('Error de conexión')
     } finally {
       setLoading(false)
     }
@@ -67,23 +72,23 @@ const Login: React.FC<Props> = ({ onLogin }) => {
         <h2>Inicio de Sesión</h2>
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label>Usuario</label>
-            <input
-              type="text"
-              value={username}
-              onChange={e => setUsername(e.target.value)}
-              placeholder="Ingrese su usuario"
-              disabled={loading}
-            />
-          </div>
+  <label>DNI</label>
+  <input
+    type="text"
+    value={username}
+    onChange={(e) => setUsername(e.target.value)}
+    placeholder="Ingresa tu DNI"
+    disabled={loading}
+  />
+</div>
+
 
           <div className="form-group">
             <label>Contraseña</label>
             <input
               type="password"
               value={password}
-              onChange={e => setPassword(e.target.value)}
-              placeholder="Ingrese su contraseña"
+              onChange={(e) => setPassword(e.target.value)}
               disabled={loading}
             />
           </div>
@@ -92,7 +97,7 @@ const Login: React.FC<Props> = ({ onLogin }) => {
             <label>Rol</label>
             <select
               value={rol}
-              onChange={e => setRol(e.target.value)}
+              onChange={(e) => setRol(e.target.value)}
               disabled={loading}
             >
               <option value="alumno">Alumno</option>
@@ -101,20 +106,13 @@ const Login: React.FC<Props> = ({ onLogin }) => {
             </select>
           </div>
 
-          <button
-            type="submit"
-            className="login-button"
-            disabled={loading}
-          >
+          <button type="submit" className="login-button" disabled={loading}>
             {loading ? 'Ingresando...' : 'Ingresar'}
           </button>
         </form>
         <div className="login-footer">
           ¿Eres nuevo?{' '}
-          <button
-            onClick={() => navigate('/register')}
-            disabled={loading}
-          >
+          <button onClick={() => navigate('/register')} disabled={loading}>
             Regístrate aquí
           </button>
         </div>
