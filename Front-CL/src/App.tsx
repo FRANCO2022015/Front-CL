@@ -5,6 +5,7 @@ import InstructorDashboard from './components/InstructorDashboard'
 import CrearCurso from './components/CrearCurso'
 import CrearHorario from './components/CrearHorario'
 import VerAlumnos from './components/VerAlumnos'
+import Register from './components/Register'
 
 export default function App() {
   const handleLogin = (_u: string, _r: string) => {}
@@ -13,6 +14,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<Navigate to="/login" />} />
         <Route path="/login" element={<Login onLogin={handleLogin} />} />
+         <Route path="/register" element={<Register />} />
         <Route path="/instructor/dashboard" element={<InstructorDashboard />} />
         <Route path="/instructor/crear-curso" element={<CrearCurso />} />
         <Route path="/instructor/:cursoId/crear-horario" element={<CrearHorario />} />

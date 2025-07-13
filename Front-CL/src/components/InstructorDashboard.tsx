@@ -1,61 +1,42 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useApi } from '../components/useApi'
+import LogoutButton from './LogoutButton'
 import './InstructorDashboard.css'
 
-interface Curso {
-  curso_id: string
-  nombre: string
-  descripcion: string
-  inicio: string
-  fin: string
-}
-
-interface Horario {
-  horario_id: string
-  dias: string[]
-  inicio_hora: string
-  fin_hora: string
-}
-
 export default function InstructorDashboard() {
-  const [cursos, setCursos] = useState<Curso[]>([])
-  const [horarios, setHorarios] = useState<Record<string,Horario[]>>({})
-  const token = localStorage.getItem('authToken') || ''
+  const [cursos, setCursos] = useState<any[]>([])
+  const [horarios, setHorarios] = useState<Record<string, any[]>>({})
   const orgId = localStorage.getItem('orgId') || ''
   const instructor = localStorage.getItem('user') || ''
   const navigate = useNavigate()
+  const { apiFetch } = useApi()
 
   useEffect(() => {
-    fetch(
-      `https://1dma7jwvx5.execute-api.us-east-1.amazonaws.com/dev/curso/listar?tenant_id=${orgId}&instructor_dni=${instructor}`,
-      { headers: { Authorization: token } }
-    )
-      .then(r => r.json())
+    apiFetch(`https://1dma7jwvx5.execute-api.us-east-1.amazonaws.com/dev/curso/listar?tenant_id=${orgId}&instructor_dni=${instructor}`)
       .then(d => {
+        if (!d) return // ya hizo logout automático
         const b = typeof d.body === 'string' ? JSON.parse(d.body) : d.body
         setCursos(b.cursos || [])
       })
-  }, [orgId, instructor, token])
+  }, [orgId, instructor])
 
   useEffect(() => {
     cursos.forEach(c => {
-      fetch(
-        `https://pu2l6zwh79.execute-api.us-east-1.amazonaws.com/dev/horario/listar?tenant_id=${orgId}&curso_id=${c.curso_id}`,
-        { headers: { Authorization: token } }
-      )
-        .then(r => r.json())
+      apiFetch(`https://pu2l6zwh79.execute-api.us-east-1.amazonaws.com/dev/horario/listar?tenant_id=${orgId}&curso_id=${c.curso_id}`)
         .then(d => {
+          if (!d) return
           const b = typeof d.body === 'string' ? JSON.parse(d.body) : d.body
           setHorarios(p => ({ ...p, [c.curso_id]: b.horarios || [] }))
         })
     })
-  }, [cursos, orgId, token])
-
+  }, [cursos, orgId])
   return (
     <div className="dashboard-container">
-      <header className="dashboard-header">
+      <header className="dashboard-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <h1>Panel de Instructor</h1>
         <button onClick={() => navigate('/instructor/crear-curso')}>Crear Curso</button>
+        <LogoutButton />
       </header>
 
       {cursos.length === 0 ? (

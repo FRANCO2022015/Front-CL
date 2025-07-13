@@ -5,8 +5,8 @@ const LogoutButton = () => {
   const navigate = useNavigate()
 
   const logout = () => {
-    const token = localStorage.getItem('token')
-    const tenant_id = 'udemy'
+    const token = localStorage.getItem('authToken')
+    const tenant_id = localStorage.getItem('orgId') || 'udemy'
 
     fetch('https://62zai3xgf6.execute-api.us-east-1.amazonaws.com/dev/usuario/logout', {
       method: 'POST',

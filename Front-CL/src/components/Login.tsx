@@ -16,48 +16,44 @@ export default function Login({ onLogin }: Props) {
   const navigate = useNavigate()
 
   useEffect(() => {
-    if (rol === 'instructor') {
-      fetch('https://h1m4en6skg.execute-api.us-east-1.amazonaws.com/dev/org/listar')
-        .then(r => r.json())
-        .then(data => {
-          const b = typeof data.body === 'string' ? JSON.parse(data.body) : data.body
-          setOrgs(b.organizaciones || [])
-        })
-    } else {
-      setOrgs([])
-      setSelectedOrg('')
-    }
-  }, [rol])
+    fetch('https://h1m4en6skg.execute-api.us-east-1.amazonaws.com/dev/org/listar')
+      .then(r => r.json())
+      .then(data => {
+        const b = typeof data.body === 'string' ? JSON.parse(data.body) : data.body
+        setOrgs(b.organizaciones || [])
+      })
+  }, [])
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!username || !password || (rol === 'instructor' && !selectedOrg)) return
-    setLoading(true)
-    const body = {
-      tenant_id: rol === 'instructor' ? selectedOrg : 'default',
-      dni: username,
-      password,
-      rol
-    }
-    const res = await fetch('https://62zai3xgf6.execute-api.us-east-1.amazonaws.com/dev/usuario/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
-    })
-    const raw = await res.json()
-    const p = raw.token ? raw : typeof raw.body === 'string' ? JSON.parse(raw.body) : raw.body
-    if (!p.token) {
-      setLoading(false)
-      return
-    }
-    localStorage.setItem('authToken', p.token)
-    localStorage.setItem('user', username)
-    localStorage.setItem('rol', rol)
-    localStorage.setItem('orgId', rol === 'instructor' ? selectedOrg : '')
-    onLogin(username, rol)
+ const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault()
+  setLoading(true)
+  const body = {
+    tenant_id: selectedOrg,    
+    rol,                       
+    dni: username,
+    password
+  }
+  const res = await fetch('https://62zai3xgf6.execute-api.us-east-1.amazonaws.com/dev/usuario/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  })
+  const raw = await res.json()
+  const p = typeof raw.body === 'string' ? JSON.parse(raw.body) : raw.body
+  if (!p.token) {
+    setLoading(false)
+    alert(p.error || 'Credenciales incorrectas')
+    return
+  }
+  localStorage.setItem('authToken', p.token)
+  localStorage.setItem('user', username)
+  localStorage.setItem('rol', rol)
+  localStorage.setItem('orgId', selectedOrg)
+  onLogin(username, rol)
+
     if (rol === 'instructor') navigate('/instructor/dashboard')
-    if (rol === 'alumno') navigate('/login')
-    if (rol === 'admin') navigate('/login')
+    if (rol === 'alumno') navigate('/alumno/cursos')
+    if (rol === 'admin') navigate('/admin/dashboard')
     setLoading(false)
   }
 
@@ -82,23 +78,34 @@ export default function Login({ onLogin }: Props) {
               <option value="admin">Admin</option>
             </select>
           </div>
-          {rol === 'instructor' && (
-            <div className="form-group">
-              <label>Organización</label>
-              <select value={selectedOrg} onChange={e => setSelectedOrg(e.target.value)} disabled={loading}>
-                <option value="">-- elige organización --</option>
-                {orgs.map(o => (
-                  <option key={o.tenant_id} value={o.tenant_id}>
-                    {o.tenant_id} – {o.descripcion}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
-          <button type="submit" className="login-button" disabled={loading}>
-            {loading ? 'Ingresando...' : 'Ingresar'}
+          <div className="form-group">
+            <label>Organización</label>
+            <select value={selectedOrg} onChange={e => setSelectedOrg(e.target.value)} disabled={loading}>
+              <option value="">-- elige organización --</option>
+              {orgs.map(o => (
+                <option key={o.tenant_id} value={o.tenant_id}>
+                  {o.tenant_id} – {o.descripcion}
+                </option>
+              ))}
+            </select>
+          </div>
+          <button
+                type="submit"
+                className="login-button"
+                disabled={loading || !username || !password || !selectedOrg}
+              >
+                {loading ? 'Ingresando...' : 'Ingresar'}
           </button>
         </form>
+        <div className="login-footer">
+          ¿Eres nuevo?{' '}
+          <button type="button" className="register-link"
+          onClick={() => navigate('/register')}
+          disabled={loading}
+            tabIndex={-1}>
+            Regístrate aquí
+          </button>
+        </div>
       </div>
     </div>
   )
