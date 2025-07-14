@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useLocation } from 'react-router-dom'
 
 const CURSO_URL = import.meta.env.VITE_API_CURSO_URL
 const HORARIO_URL = import.meta.env.VITE_API_HORARIO_URL
@@ -179,7 +180,8 @@ export default function InstructorDashboard() {
                   {(horarios[curso.curso_id] || []).map(horario => (
                     <li key={horario.horario_id} style={{ marginBottom: 4 }}>
                       <b>Días:</b> {horario.dias.join(', ')} &nbsp;
-                      <b>Hora:</b> {horario.inicio_hora} - {horario.fin_hora}
+                      <b>Hora:</b> {horario.inicio_hora} - {horario.fin_hora} &nbsp;
+                      <b>Precio:</b> S/ {curso.precio}
                     </li>
                   ))}
                 </ul>

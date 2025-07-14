@@ -15,31 +15,34 @@ export default function EditarCurso() {
   const orgId = localStorage.getItem('orgId') || ''
   const token = localStorage.getItem('authToken') || ''
 
-  useEffect(() => {
-    fetch(`${CURSO_URL}/buscar?tenant_id=${orgId}&curso_id=${cursoId}`, {
+   useEffect(() => {
+    if (!cursoId || !orgId) return
+    fetch(`${CURSO_URL}/buscar?curso_id=${cursoId}&tenant_id=${orgId}`, {
       headers: { Authorization: token }
     })
       .then(r => r.json())
       .then(d => {
         const b = typeof d.body === 'string' ? JSON.parse(d.body) : d.body
-        if (!b.curso) { alert('Curso no encontrado'); navigate(-1); return }
-        setCurso(b.curso)
-        setNombre(b.curso.nombre)
-        setDescripcion(b.curso.descripcion)
-        setInicio(b.curso.inicio)
-        setFin(b.curso.fin)
-        setPrecio(b.curso.precio || '')
+        if (!b || !b.curso_id) {
+          alert('Curso no encontrado')
+          navigate(-1)
+          return
+        }
+        setCurso(b)
+        setNombre(b.nombre)
+        setDescripcion(b.descripcion)
+        setInicio(b.inicio)
+        setFin(b.fin)
+        setPrecio(b.precio || '')
       })
   }, [cursoId, orgId, token, navigate])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    const res = await fetch(`${CURSO_URL}/modificar`, {
+    const res = await fetch(`${CURSO_URL}/modificar?tenant_id=${orgId}&curso_id=${cursoId}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json', Authorization: token },
       body: JSON.stringify({
-        tenant_id: orgId,
-        curso_id: cursoId,
         nombre,
         descripcion,
         inicio,
@@ -49,7 +52,7 @@ export default function EditarCurso() {
     })
     if (res.ok) {
       alert('Curso actualizado')
-      navigate('/instructor/dashboard')
+      navigate('/instructor/dashboard?updated=1')
     } else {
       alert('Error actualizando curso')
     }
