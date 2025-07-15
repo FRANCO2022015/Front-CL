@@ -6,13 +6,19 @@ const CURSO_URL = import.meta.env.VITE_API_CURSO_URL
 const HORARIO_URL = import.meta.env.VITE_API_HORARIO_URL
 const COMPRA_URL = import.meta.env.VITE_API_COMPRA_URL
 const USER_URL = import.meta.env.VITE_API_USER_URL
-
+const LIMIT = 2
 export default function InstructorDashboard() {
   const [cursos, setCursos] = useState<any[]>([])
   const [horarios, setHorarios] = useState<Record<string, any[]>>({})
   const [expanded, setExpanded] = useState<string | null>(null)
   const [showAlumnos, setShowAlumnos] = useState<string | null>(null)
   const [alumnos, setAlumnos] = useState<Record<string, any[]>>({})
+  const [isLastPage, setIsLastPage] = useState(false)
+const [prevPaginas, setPrevPaginas] = useState<string[]>([])
+const [loading, setLoading] = useState(false)
+
+   const [ultimoCursoId, setUltimoCursoId] = useState<string | null>(null)
+
   const navigate = useNavigate()
 
   const orgId = localStorage.getItem('orgId') || ''
@@ -20,15 +26,19 @@ export default function InstructorDashboard() {
   const token = localStorage.getItem('authToken') || ''
 
   useEffect(() => {
-    fetch(`${CURSO_URL}/listar?tenant_id=${orgId}&instructor_dni=${instructorDni}`, {
-      headers: { Authorization: token }
+  fetch(`${CURSO_URL}/listar?tenant_id=${orgId}`, {
+    headers: { Authorization: token }
+  })
+    .then(r => r.json())
+    .then(d => {
+      const b = typeof d.body === 'string' ? JSON.parse(d.body) : d.body
+      // Filtra SOLO los cursos del instructor logueado (dni)
+      const soloMisCursos = (b.cursos || []).filter(
+        (c: any) => c.instructor_dni === instructorDni // O c.tenant_instructor === instructorDni si es el caso
+      )
+      setCursos(soloMisCursos)
     })
-      .then(r => r.json())
-      .then(d => {
-        const b = typeof d.body === 'string' ? JSON.parse(d.body) : d.body
-        setCursos(b.cursos || [])
-      })
-  }, [orgId, instructorDni, token])
+}, [orgId, instructorDni, token])
 
   useEffect(() => {
     if (cursos.length === 0) return
@@ -74,12 +84,51 @@ export default function InstructorDashboard() {
     setAlumnos(a => ({ ...a, [cursoId]: b.compras || [] }))
     setShowAlumnos(cursoId)
   }
+const fetchCursos = async (lastCursoId = '') => {
+  setLoading(true)
+  let url = `${CURSO_URL}/listar?tenant_id=${orgId}&limit=2&dni_instructor=${instructorDni}`
+  if (lastCursoId) url += `&lastCursoId=${lastCursoId}`
+
+  const res = await fetch(url, { headers: { Authorization: token } })
+  const d = await res.json()
+  const b = typeof d.body === 'string' ? JSON.parse(d.body) : d.body
+  setCursos(b.cursos || [])
+  setIsLastPage(!b.paginacion || !b.paginacion.ultimoCursoId || (b.cursos && b.cursos.length < 2))
+  setLoading(false)
+}
+
+useEffect(() => {
+  fetchCursos()
+  setPrevPaginas([])
+}, [orgId, instructorDni])
+
+// Siguiente página
+const nextPage = () => {
+  if (isLastPage || cursos.length === 0) return
+  // OJO: El último curso de la página actual
+  const lastCursoId = cursos[cursos.length - 1].curso_id
+  setPrevPaginas(prev => [...prev, lastCursoId])
+  fetchCursos(lastCursoId)
+}
+
+// Página anterior
+const backPage = () => {
+  if (prevPaginas.length === 0) return
+  const prevLastCursoId = prevPaginas[prevPaginas.length - 2] || ''
+  setPrevPaginas(prev => prev.slice(0, -1))
+  fetchCursos(prevLastCursoId)
+}
+
 
   return (
     <div style={{ minHeight: '100vh', background: '#151c28' }}>
       <div style={{ padding: 30, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h1 style={{ color: 'white', fontWeight: 800, fontSize: 32 }}>Panel de Instructor</h1>
         <div>
+          <div style={{ display: 'flex', gap: 12, marginBottom: 20 }}>
+      <button onClick={backPage} disabled={prevPaginas.length ==0 || loading}>Anterior</button>
+      <button onClick={nextPage} disabled={isLastPage || loading}>Siguiente</button>
+    </div>
           <button
             onClick={() => navigate('/instructor/crear-curso')}
             style={{
@@ -96,6 +145,7 @@ export default function InstructorDashboard() {
           >Cerrar sesión</button>
         </div>
       </div>
+      
 
       <div style={{
         display: 'flex', gap: 32, flexWrap: 'wrap', padding: 30, alignItems: 'flex-start'
@@ -180,7 +230,7 @@ export default function InstructorDashboard() {
                   {(horarios[curso.curso_id] || []).map(horario => (
                     <li key={horario.horario_id} style={{ marginBottom: 4 }}>
                       <b>Días:</b> {horario.dias.join(', ')} &nbsp;
-                      <b>Hora:</b> {horario.inicio_hora} - {horario.fin_hora} &nbsp;
+                      <b>Hora:</b> {horario.inicio_hora} - {horario.fin_hora}&nbsp;
                       <b>Precio:</b> S/ {curso.precio}
                     </li>
                   ))}

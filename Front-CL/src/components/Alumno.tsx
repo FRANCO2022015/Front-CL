@@ -4,7 +4,7 @@ import LogoutButton from './LogoutButton'
 const CURSO_URL = import.meta.env.VITE_API_CURSO_URL
 const HORARIO_URL = import.meta.env.VITE_API_HORARIO_URL
 const COMPRA_URL = import.meta.env.VITE_API_COMPRA_URL
-
+const LIMIT = 2
 type Curso = {
   curso_id: string
   nombre: string
@@ -36,6 +36,10 @@ export default function Alumno() {
   const [showCarrito, setShowCarrito] = useState(true)
   const [showMisCompras, setShowMisCompras] = useState(false)
   const [cursoExpandido, setCursoExpandido] = useState<string | null>(null)
+  const [ultimoCursoId, setUltimoCursoId] = useState<string | null>(null)
+  const [prevPaginas, setPrevPaginas] = useState<string[]>([]) // Stack de ids para retroceder
+  const [isLastPage, setIsLastPage] = useState(false)
+
 
   const orgId = localStorage.getItem('orgId') || ''
   const alumnoDni = localStorage.getItem('user') || ''
@@ -108,6 +112,41 @@ useEffect(() => {
   }
 }, [alumnoDni, orgId])
 
+ const fetchCursos = (lastCursoIdParam?: string) => {
+    let url = `${CURSO_URL}/listar?tenant_id=${orgId}&limit=${LIMIT}`
+    if (lastCursoIdParam) url += `&lastCursoId=${lastCursoIdParam}`
+
+    fetch(url, { headers: { Authorization: alumnoToken } })
+      .then(r => r.json())
+      .then(d => {
+        const b = typeof d.body === 'string' ? JSON.parse(d.body) : d.body
+        setCursos(b.cursos || [])
+        setUltimoCursoId(b.paginacion?.ultimoCursoId || null)
+        setIsLastPage((b.cursos || []).length < LIMIT)
+      })
+  }
+
+  useEffect(() => {
+    fetchCursos()
+    setPrevPaginas([])
+  }, [orgId])
+
+  // Siguiente página
+  const nextPage = () => {
+  if (!isLastPage && cursos.length > 0) {
+    const lastId = cursos[cursos.length - 1].curso_id
+    setPrevPaginas(prev => [...prev, lastId])
+    fetchCursos(lastId)
+  }
+}
+
+  // Página anterior
+ const backPage = () => {
+  if (prevPaginas.length === 0) return
+  const prevLastCursoId = prevPaginas[prevPaginas.length - 2] || ''
+  setPrevPaginas(prev => prev.slice(0, -1))
+  fetchCursos(prevLastCursoId)
+}
 
   // Reservar un curso
   const reservar = async (curso: Curso, horario: Horario) => {
@@ -198,6 +237,10 @@ const inscribirTodosReservados = async () => {
       <div style={{ flex: 1, padding: '24px' }}>
         <LogoutButton />
         <h1>Catálogo de Cursos</h1>
+        <div style={{ display: 'flex', gap: 12, marginBottom: 20 }}>
+          <button onClick={backPage} disabled={prevPaginas.length==0}>Anterior</button>
+          <button onClick={nextPage} disabled={isLastPage}>Siguiente</button>
+        </div>
 
         <div style={{ display: 'flex', gap: 40, flexWrap: 'wrap', marginTop: 32 }}>
           {cursos.map(curso => (
@@ -273,6 +316,7 @@ const inscribirTodosReservados = async () => {
                   </ul>
                 </div>
               )}
+              
 
               {/* Icono para mostrar/ocultar */}
               <div style={{
@@ -336,6 +380,7 @@ const inscribirTodosReservados = async () => {
           )}
         </div>
       )}
+
       {/* Mis Compras */}
       {showMisCompras && (
         <div style={{
@@ -369,6 +414,8 @@ const inscribirTodosReservados = async () => {
           )}
         </div>
       )}
-    </div>
+          </div>
+    
   )
+  
 }
