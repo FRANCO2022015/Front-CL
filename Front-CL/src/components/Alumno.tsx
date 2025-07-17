@@ -6,6 +6,8 @@ const CURSO_URL = import.meta.env.VITE_API_CURSO_URL
 const HORARIO_URL = import.meta.env.VITE_API_HORARIO_URL
 const COMPRA_URL = import.meta.env.VITE_API_COMPRA_URL
 const LIMIT = 2
+const ELASTIC_URL  = 'http://34.202.17.116:9200/cursos/_search'
+const PAGE_SIZE = 5
 
 type Curso = {
   curso_id: string
@@ -31,6 +33,7 @@ type Compra = {
 }
 
 export default function Alumno() {
+ 
   const [cursos, setCursos] = useState<Curso[]>([])
   const [horarios, setHorarios] = useState<Record<string, Horario[]>>({})
   const [compras, setCompras] = useState<Compra[]>([])
@@ -44,7 +47,18 @@ export default function Alumno() {
   const [reservados, setReservados] = useState<Compra[]>([])
   const [inscritos, setInscritos] = useState<Compra[]>([])
   const [cursoExpandido, setCursoExpandido] = useState<string | null>(null)
+  const [error,     setError    ] = useState<string|null>(null)
 
+  // Estados de búsqueda
+  const [busqueda,  setBusqueda ] = useState<string>('')
+  const [minPrecio, setMinPrecio] = useState<string>('')
+  const [maxPrecio, setMaxPrecio] = useState<string>('')
+  const [desde,     setDesde    ] = useState<string>('')
+  const [hasta,     setHasta    ] = useState<string>('')
+
+  // IDs y paginación
+  const [cursoIds,   setCursoIds ] = useState<string[]>([])
+  const [page,       setPage     ] = useState<number>(0)
   const orgId = localStorage.getItem('orgId') || ''
   const alumnoDni = localStorage.getItem('user') || ''
   const alumnoToken = localStorage.getItem('authToken') || ''
@@ -55,6 +69,84 @@ export default function Alumno() {
     const curso = cursos.find(c => c.curso_id === curso_id)
     return curso?.precio ?? 0
   }
+  const buscarEnElastic = async () => {
+    setLoading(true)
+    setError(null)
+    setPage(0)
+    setCursoIds([])
+    try {
+      const must: any[] = []
+      if (busqueda.trim()) must.push({ bool:{ should:[
+        { match:{ 'descripcion.fuzzy':   { query: busqueda, fuzziness:'AUTO' } } },
+        { match_phrase_prefix:{ 'descripcion.prefix':{ query: busqueda } } },
+        { match:{ nombre:{ query: busqueda, fuzziness:'AUTO' } } }
+      ]}})
+      if (minPrecio||maxPrecio) {
+        const range: any = {}
+        if (minPrecio) range.gte = parseFloat(minPrecio)
+        if (maxPrecio) range.lte = parseFloat(maxPrecio)
+        must.push({ range:{ precio: range } })
+      }
+      if (desde||hasta) {
+        const range: any = {}
+        if (desde) range.gte = desde
+        if (hasta) range.lte = hasta
+        must.push({ range:{ inicio: range } })
+      }
+
+      const query = { query:{ bool:{ must } }, _source:['curso_id'], size:100 }
+      const res = await fetch(ELASTIC_URL, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(query) })
+      const data = await res.json()
+      const ids = (data.hits?.hits||[])
+        .map((h:any)=>h._source?.curso_id)
+        .filter(Boolean)
+      setCursoIds(ids)
+    } catch(e) {
+      console.error(e)
+      setError('Error al conectar con Elasticsearch.')
+    } finally {
+      setLoading(false)
+    }
+  }
+  // Obtiene detalles de cursos por página de IDs
+  const fetchCursosPorPagina = async (ids: string[]) => {
+    setLoading(true)
+    try {
+      const results: Curso[] = []
+      for (const id of ids) {
+        const res = await fetch(`${CURSO_URL}/buscar?tenant_id=${orgId}&curso_id=${id}`, { headers:{ Authorization:alumnoToken } })
+        const js  = await res.json()
+        const curso = typeof js.body==='string'? JSON.parse(js.body) : js.body
+        if (curso?.nombre) results.push(curso)
+      }
+      setCursos(results)
+      // Carga horarios para esta página
+      const mapHor: Record<string,Horario[]> = {}
+      await Promise.all(results.map(async c=>{
+        const resp = await fetch(`${HORARIO_URL}/listar?tenant_id=${orgId}&curso_id=${c.curso_id}`, { headers:{Authorization:alumnoToken} })
+        const json = await resp.json()
+        const body = typeof json.body==='string'? JSON.parse(json.body): json.body
+        mapHor[c.curso_id] = body.horarios||[]
+      }))
+      setHorarios(mapHor)
+    } catch(e) {
+      console.error(e)
+      setError('Error al obtener los cursos.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Cada vez que cambian los IDs o la página
+  useEffect(() => {
+    const sliceIds = cursoIds.slice(page*PAGE_SIZE,(page+1)*PAGE_SIZE)
+    if (sliceIds.length) fetchCursosPorPagina(sliceIds)
+    else setCursos([])
+  }, [cursoIds, page])
+
+  // Búsqueda inicial al montar
+  useEffect(() => { buscarEnElastic() }, [])
+
 
   // Trae cursos paginados
   const fetchCursos = (lastCursoIdParam?: string) => {
@@ -234,6 +326,24 @@ export default function Alumno() {
 
   return (
     <div style={{ display: 'flex', height: '100vh' }}>
+       {/* BARRA DE BÚSQUEDA */}
+      <div style={{ background:'#f5f5f5', padding:16, borderBottom:'1px solid #ccc' }}>
+        <h2>Búsqueda de Cursos</h2>
+        <div style={{ display:'grid', gap:8, gridTemplateColumns:'repeat(auto-fill,minmax(200px,1fr))' }}>
+          <input placeholder="Descripción o nombre" value={busqueda} onChange={e=>setBusqueda(e.target.value)} />
+          <input type="number" placeholder="Precio mínimo" value={minPrecio} onChange={e=>setMinPrecio(e.target.value)} />
+          <input type="number" placeholder="Precio máximo" value={maxPrecio} onChange={e=>setMaxPrecio(e.target.value)} />
+          <input type="date" placeholder="Desde" value={desde} onChange={e=>setDesde(e.target.value)} />
+          <input type="date" placeholder="Hasta" value={hasta} onChange={e=>setHasta(e.target.value)} />
+        </div>
+        <button onClick={buscarEnElastic} disabled={loading} style={{ marginTop:10 }}>
+          {loading?'Buscando...':'Buscar'}
+        </button>
+        {error && <div style={{ color:'red', marginTop:8 }}>{error}</div>}
+      </div>
+        
+    
+  
       <div style={{ flex: 1, padding: '24px' }}>
         <LogoutButton />
         <h1>Catálogo de Cursos</h1>

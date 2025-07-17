@@ -6,6 +6,13 @@ const CURSO_URL = import.meta.env.VITE_API_CURSO_URL
 export default function CursosInstructor() {
   const { instructorDni } = useParams<{ instructorDni: string }>()
   const [cursos, setCursos] = useState<any[]>([])
+const [searchTerm, setSearchTerm] = useState<string>("");
+
+const cursosFiltrados = cursos.filter(c =>
+  c.nombre.toLowerCase().includes(searchTerm.toLowerCase())
+);
+
+
   const orgId = localStorage.getItem('orgId') || ''
   const token = localStorage.getItem('authToken') || ''
 
@@ -23,8 +30,9 @@ export default function CursosInstructor() {
   return (
     <div style={{ padding: 40 }}>
       <h2>Cursos de Instructor {instructorDni}</h2>
+      
       <div style={{ display: "flex", gap: 32, flexWrap: "wrap", marginTop: 24 }}>
-        {cursos.map(curso => (
+        {cursosFiltrados.map(curso => (
           <div
             key={curso.curso_id}
             style={{
