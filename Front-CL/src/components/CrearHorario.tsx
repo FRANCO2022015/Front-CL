@@ -1,10 +1,6 @@
 import React, { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-const ORG_URL = import.meta.env.VITE_API_ORG_URL
-const USER_URL = import.meta.env.VITE_API_USER_URL
-const CURSO_URL = import.meta.env.VITE_API_CURSO_URL
 const HORARIO_URL = import.meta.env.VITE_API_HORARIO_URL
-const COMPRA_URL = import.meta.env.VITE_API_COMPRA_URL
 
 export default function CrearHorario() {
   const { cursoId } = useParams<{ cursoId: string }>()
@@ -39,9 +35,12 @@ export default function CrearHorario() {
         <label><input type="checkbox" onChange={() => toggleDia('miercoles')} /> miércoles</label>
         <label><input type="checkbox" onChange={() => toggleDia('jueves')} /> jueves</label>
         <label><input type="checkbox" onChange={() => toggleDia('viernes')} /> viernes</label>
-        <input type="time" value={inicioHora} onChange={e => setInicioHora(e.target.value)} />
-        <input type="time" value={finHora} onChange={e => setFinHora(e.target.value)} />
+        <input type="time" value={inicioHora} onChange={e => setInicioHora(e.target.value)} required />
+        <input type="time" value={finHora} onChange={e => setFinHora(e.target.value)} required />
         <button type="submit">Crear Horario</button>
+        <button type="button" style={{ marginLeft: 8, background: '#a9a9a9', color: '#fff', border: 'none', borderRadius: 8, fontWeight: 700, padding: '2px 16px' }} onClick={() => navigate(-1)}>
+          Cancelar
+        </button>
       </form>
     </div>
   )
