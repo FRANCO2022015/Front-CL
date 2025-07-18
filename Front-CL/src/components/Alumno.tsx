@@ -6,7 +6,7 @@ const CURSO_URL = import.meta.env.VITE_API_CURSO_URL
 const HORARIO_URL = import.meta.env.VITE_API_HORARIO_URL
 const COMPRA_URL = import.meta.env.VITE_API_COMPRA_URL
 const LIMIT = 2
-const ELASTIC_URL  = 'http://34.202.17.116:9200/cursos/_search'
+const ELASTIC_URL  = 'http://100.28.245.90:9200/cursos/_search'
 const PAGE_SIZE = 5
 
 type Curso = {

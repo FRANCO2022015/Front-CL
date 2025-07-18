@@ -29,7 +29,7 @@ export default function InstructorDashboard() {
   const fetchCursos = (lastIdParam?: string) => {
     setLoading(true)
     setError(null)
-    let url = `${CURSO_URL}/listar?tenant_id=${orgId}&instructor_dni=${instructorDni}&limit=${LIMIT}`
+    let url = `${CURSO_URL}/listar?tenant_id=${orgId}&dni_instructor=${instructorDni}&limit=${LIMIT}`
     if (lastIdParam) url += `&lastCursoId=${lastIdParam}`
     fetch(url, { headers: { Authorization: token } })
       .then(r => r.json())

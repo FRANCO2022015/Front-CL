@@ -17,7 +17,7 @@ const cursosFiltrados = cursos.filter(c =>
   const token = localStorage.getItem('authToken') || ''
 
   useEffect(() => {
-    fetch(`${CURSO_URL}/listar?tenant_id=${orgId}&instructor_dni=${instructorDni}`, {
+    fetch(`${CURSO_URL}/listar?tenant_id=${orgId}&dni_instructor=${instructorDni}`, {
       headers: { Authorization: token }
     })
       .then(r => r.json())
